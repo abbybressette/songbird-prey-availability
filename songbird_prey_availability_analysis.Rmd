@@ -1,0 +1,946 @@
+---
+title: "Native and non-native invasive plant neighbors cause contrasting associational effects on food resources for declining songbirds in early successional habitats"
+author: "Abby K. Bressette & Lesley P. Bulluck"
+date: "2026-10-16"
+output: html_document
+editor_options: 
+chunk_output_type: console
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = T)
+
+library(tidyverse)
+library(AICcmodavg)
+library(bbmle) 
+library(glmmTMB)
+library(ggeffects)
+library(easystats)
+library(vegan)
+library(gridExtra)
+library(effectsize)
+
+```
+
+# Data Wrangling
+
+```{r data wrangling, include = T}
+#branch clipping sample data
+lep_biomass_2025 <- read.csv("lep_biomass_2025.csv",
+                             stringsAsFactors = T)
+
+#vegetation survey data
+veg_data_2025 <- read.csv("veg_data_2025.csv",
+                          stringsAsFactors = T)
+
+#output from iTree
+itree_data <- read.csv("itree_output_height.csv",
+                         stringsAsFactors = T)
+
+#create property variable
+lep_biomass_2025$property <- substr(lep_biomass_2025$vegpoint, 1, 3)
+
+## CATERPILLAR ABUNDANCE DATA
+
+#combining the number of caterpillars per sample regardless of size or palatability category
+lep_biomass_2025 <- mutate(lep_biomass_2025,
+                            total_cat = sm_smooth_cat + 
+                            med_smooth_cat +
+                            lg_smooth_cat + 
+                            small_hairy_cat +
+                            med_hairy_cat +
+                            lg_hairy_cat)
+
+## CATERPILLAR BIOMASS DATA
+
+#combining dry biomass of smooth and hairy categories
+lep_biomass_2025 <- mutate(lep_biomass_2025,
+                           cat_g = 
+                             smooth_cat_dry_mass_g +
+                             hairy_cat_dry_mass_g)
+
+#dry caterpillar biomass / dry leaf biomass
+lep_biomass_2025 <- mutate(lep_biomass_2025,
+                           cat_branch = 
+                             cat_g/tree_dry_mass_g)
+
+#merging caterpillar and iTree data
+lep_biomass_2025 <- merge(lep_biomass_2025, itree_data,
+                           by = c("plot_ID", "tree_species",
+                                  "tree_height_m"))
+
+#filtering out trees with a DBH smaller than 10
+lep_biomass_2025 <- lep_biomass_2025 %>% filter(dbh_cm.x >= 10)
+
+#converting dry leaf biomass of entire tree from kg to g
+lep_biomass_2025 <- mutate(lep_biomass_2025,
+                           leaf_biomass_g = leaf_biomass_kg * 1000)
+
+#multiplying caterpillar/branch biomass (g) by leaf biomass of entire tree (g)
+lep_biomass_2025$cat_tree <- lep_biomass_2025$cat_branch * lep_biomass_2025$leaf_biomass_g
+
+## VEGETATION DATA
+
+#removing observations with no veg surveys
+lep_biomass_2025 <- lep_biomass_2025 %>% filter(veg_survey != "no")
+
+#combining large and small shrubs, multiplying small by 0.5 to weight by differences in shrub biomass
+veg_data_2025$blackberry <- veg_data_2025$lg_blackberry +
+  veg_data_2025$sm_blackberry * 0.5
+
+veg_data_2025$coralberry <- veg_data_2025$lg_coralberry +
+  veg_data_2025$sm_coralberry * 0.5
+
+veg_data_2025$olive <- veg_data_2025$lg_olive + 
+  veg_data_2025$sm_olive * 0.5
+
+veg_data_2025$mfr <- veg_data_2025$lg_mfr +
+  veg_data_2025$sm_mfr * 0.5
+
+veg_data_2025$barberry <- veg_data_2025$lg_barberry +
+  veg_data_2025$sm_barberry * 0.5
+
+veg_data_2025$honeysuckle <- veg_data_2025$lg_honeysuckle +
+  veg_data_2025$sm_honeysuckle * 0.5
+
+veg_data_2025$other_nativeShrub <- veg_data_2025$lg_other_nativeShrub +
+  veg_data_2025$sm_other_nativeShrub * 0.5
+
+veg_data_2025$other_nonnativeShrub <- veg_data_2025$lg_other_nonnativeShrub +
+  veg_data_2025$sm_other_nonnativeShrub * 0.5
+
+#including trees in veg neighborhood
+veg_data_2025 <- veg_data_2025 %>% 
+  mutate(all_trees = sm_locust + med_locust + lg_locust + 
+           sm_maple + med_maple + lg_maple +
+           sm_oak + med_oak + lg_oak +
+           sm_cherry + med_cherry + lg_cherry +
+           sm_apple + med_apple + lg_apple + 
+           sm_ash + med_ash + lg_ash + 
+           sm_hickory + med_hickory + lg_hickory + 
+           sm_walnut + med_walnut + lg_walnut +
+           sm_hawthorn + med_hawthorn + lg_hawthorn +
+           sm_elm + med_elm + lg_elm + 
+           sm_birch + med_birch + lg_birch +
+           sm_othertree + med_othertree + lg_othertree)
+
+#including both first and second distance bands weighted equally
+veg_data_2025 <- veg_data_2025 %>% filter(distance_tree != "1")
+
+#making proportion native column including shrubs, saplings, and vines
+veg_data_2025 <- veg_data_2025 %>% 
+  mutate(native_veg = blackberry + other_nativeShrub +
+           all_trees + grape + creeper + clematis + other_nativeVine) %>% 
+  mutate(nonnative_veg = olive + barberry + mfr + coralberry + 
+           honeysuckle + other_nonnativeShrub + obittersweet) %>% 
+  mutate(totalveg = native_veg + nonnative_veg,
+         prop_native = native_veg/totalveg)
+
+#making this number a percentage by dividing by the max value and multiplying by 100
+veg_data_2025$totalveg <- (veg_data_2025$totalveg/312.5) * 100
+
+#merging caterpillar, tree, and vegetation data
+lep_biomass_2025 <- left_join(lep_biomass_2025, veg_data_2025,
+                      by = c("plot_ID", "tree_species", 
+                             "vegpoint", "letter_code"))
+
+#dropping redundant columns
+lep_biomass_2025 <- subset(lep_biomass_2025, 
+                                select = -c(date.x, date.y))
+
+## VEGETATION DIVERSITY
+#combining all tree size classes for diversity
+lep_biomass_2025 <- lep_biomass_2025 %>% 
+  mutate(locust = sm_locust + med_locust + lg_locust,
+         maple = sm_maple + med_maple + lg_maple,
+         oak = sm_oak + med_oak + lg_oak,
+         cherry = sm_cherry + med_cherry + lg_cherry,
+         apple = sm_apple + med_apple + lg_apple,
+         ash = sm_ash + med_ash + lg_ash,
+         hickory = sm_hickory + med_hickory + lg_hickory,
+         walnut = sm_walnut + med_walnut + lg_walnut,
+         hawthorn = sm_hawthorn + med_hawthorn + lg_hawthorn,
+         elm = sm_elm + med_elm + lg_elm,
+         birch = sm_birch + med_birch + lg_birch,
+         othertree = sm_othertree + med_othertree + lg_othertree)
+
+#total richness
+tot_rich <- select(lep_biomass_2025, blackberry, coralberry,
+                 olive, mfr, barberry, honeysuckle, other_nativeShrub,
+                 other_nonnativeShrub, locust, maple, oak, cherry,
+                 apple, ash, hickory, walnut, hawthorn, elm, birch,
+                 othertree, grape, creeper, clematis, othervine,
+                 obittersweet)
+
+veg_rich <- rowSums(tot_rich > 0)
+lep_biomass_2025$veg_rich <- veg_rich
+
+#native richness
+native_rich <- select(lep_biomass_2025, blackberry, other_nativeShrub,
+                      locust, maple, oak, cherry, apple, ash, hickory,
+                      walnut, hawthorn, elm, birch, othertree, grape,
+                      creeper, clematis, othervine)
+
+native_veg_rich <- rowSums(native_rich > 0)
+lep_biomass_2025$native_veg_rich <- native_veg_rich
+
+#shannon diversity of all vegetation
+shannondiv <- diversity(tot_rich)
+lep_biomass_2025$shannondiv <- shannondiv
+
+#shannon diversity of native vegetation
+native_shannondiv <- diversity(native_rich)
+lep_biomass_2025$native_shannondiv <- native_shannondiv
+
+```
+
+# Abundance GLMMs
+
+```{r total cat abundance glmm}
+#selecting model family
+#poisson
+total_cat_pois <- glmmTMB(total_cat ~ tree_species + 
+                  offset(log(tree_dry_mass_g)),
+                  data = lep_biomass_2025,
+                  ziformula = ~0,
+                  family = poisson)
+
+#negative binomial 1
+total_cat_nbin1 <- glmmTMB(total_cat ~ tree_species + 
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom1)
+
+#negative binomial 2
+total_cat_nbin2 <- glmmTMB(total_cat ~ tree_species + 
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+#zero-truncated negative binomial 2
+total_cat_nbin2_zh <- glmmTMB(total_cat ~ tree_species + 
+                          offset(log(tree_dry_mass_g)),
+                          data = lep_biomass_2025,
+                          ziformula = ~1,
+                          family = truncated_nbinom2)
+
+AICctab(total_cat_pois, total_cat_nbin1, total_cat_nbin2, total_cat_nbin2_zh)
+
+summary(total_cat_nbin2)
+check_model(total_cat_nbin2, size_dot = 1.2) 
+check_overdispersion(total_cat_nbin2)
+check_zeroinflation(total_cat_nbin2)
+
+#zi formula
+total_cat_nbin2_z <- glmmTMB(total_cat ~ tree_species + 
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~1,
+                   family = nbinom2)
+
+total_cat_nbin2_sp <- glmmTMB(total_cat ~ tree_species + 
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~tree_species,
+                   family = nbinom2)
+
+total_cat_nbin2_pnat <- glmmTMB(total_cat ~ tree_species + 
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~prop_native,
+                   family = nbinom2)
+
+AICctab(total_cat_nbin2, total_cat_nbin2_z, 
+       total_cat_nbin2_sp, total_cat_nbin2_pnat)
+
+#assess property as random effect
+total_cat_nbin2_re <- glmmTMB(total_cat ~ tree_species + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+AICtab(total_cat_nbin2, total_cat_nbin2_re)
+
+summary(total_cat_nbin2_re)
+check_model(total_cat_nbin2_re, size_dot = 1.2) 
+check_overdispersion(total_cat_nbin2_re)
+check_zeroinflation(total_cat_nbin2_re)
+
+#dispersion parameter
+total_cat_nbin2_d <- glmmTMB(total_cat ~ tree_species + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   dispformula = ~week,
+                   family = nbinom2)
+
+AICctab(total_cat_nbin2, total_cat_nbin2_re, total_cat_nbin2_d)
+
+#test hypotheses
+total_cat_null <- glmmTMB(total_cat ~ 1 + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_spp <- glmmTMB(total_cat ~ tree_species + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+#additive
+total_cat_veg_add <- glmmTMB(total_cat ~ tree_species + totalveg + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_nat_add <- glmmTMB(total_cat ~ tree_species + prop_native + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_ao_add <- glmmTMB(total_cat ~ tree_species + olive + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_mfr_add <- glmmTMB(total_cat ~ tree_species + mfr + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_bar_add <- glmmTMB(total_cat ~ tree_species + barberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_bla_add <- glmmTMB(total_cat ~ tree_species + blackberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_cor_add <- glmmTMB(total_cat ~ tree_species + coralberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_vegRich_add <- glmmTMB(total_cat ~ tree_species + veg_rich + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_natVegRich_add <- glmmTMB(total_cat ~ tree_species + native_veg_rich + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_shannon_add <- glmmTMB(total_cat ~ tree_species + shannondiv + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_natShannon_add <- glmmTMB(total_cat ~ tree_species + native_shannondiv + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+#interactive
+total_cat_veg_int <- glmmTMB(total_cat ~ tree_species * totalveg + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_nat_int <- glmmTMB(total_cat ~ tree_species * prop_native + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_ao_int <- glmmTMB(total_cat ~ tree_species * olive + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_mfr_int <- glmmTMB(total_cat ~ tree_species * mfr + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_bar_int <- glmmTMB(total_cat ~ tree_species * barberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_bla_int <- glmmTMB(total_cat ~ tree_species * blackberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2)
+
+total_cat_cor_int <- glmmTMB(total_cat ~ tree_species * coralberry + (1|property) +
+                   offset(log(tree_dry_mass_g)),
+                   data = lep_biomass_2025,
+                   ziformula = ~0,
+                   family = nbinom2) 
+
+total_cat_vegRich_int <- glmmTMB(total_cat ~ tree_species * veg_rich + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_natVegRich_int <- glmmTMB(total_cat ~ tree_species * native_veg_rich + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_shannon_int <- glmmTMB(total_cat ~ tree_species * shannondiv + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+total_cat_natShannon_int <- glmmTMB(total_cat ~ tree_species * native_shannondiv + (1|property) + 
+                    offset(log(tree_dry_mass_g)),
+                    data = lep_biomass_2025,
+                    ziformula = ~0,
+                    family = nbinom2)
+
+AICctab(total_cat_null, 
+        total_cat_spp, 
+        total_cat_veg_add, 
+        total_cat_nat_add,
+        total_cat_ao_add, 
+        total_cat_mfr_add, 
+        total_cat_bar_add,
+        total_cat_bla_add, 
+        total_cat_cor_add, 
+        total_cat_vegRich_add, 
+        total_cat_natVegRich_add, 
+        total_cat_shannon_add, 
+        total_cat_natShannon_add, 
+        total_cat_veg_int, 
+        total_cat_nat_int,
+        total_cat_ao_int, 
+        total_cat_mfr_int, 
+        total_cat_bar_int,
+        total_cat_bla_int, 
+        total_cat_cor_int, 
+        total_cat_vegRich_int, 
+        total_cat_natVegRich_int,
+        total_cat_shannon_int, 
+        total_cat_natShannon_int)
+
+summary(total_cat_bla_add) 
+confint(total_cat_bla_add)
+check_model(total_cat_bla_add, size_dot = 1.2)
+check_overdispersion(total_cat_bla_add)
+check_zeroinflation(total_cat_bla_add)
+check_collinearity(total_cat_bla_add)
+r2(total_cat_bla_add)
+
+summary(total_cat_natVegRich_add)
+confint(total_cat_natVegRich_add)
+check_model(total_cat_natVegRich_add, size_dot = 1.2)
+check_overdispersion(total_cat_bla_add)
+check_zeroinflation(total_cat_bla_add)
+check_collinearity(total_cat_bla_add)
+r2(total_cat_bla_add)
+
+```
+
+## Abundance Plots
+
+```{r total cat abundance plot}
+#blackberry abundance plot
+pred_total_cat_bla_add <- predict_response(total_cat_bla_add,
+                         terms = c("blackberry", "tree_species"), 
+                         condition = c(tree_dry_mass_g = 1),
+                         bias_correction = T)
+
+#adjust raw data to align with predicted
+lep_biomass_2025$cat_per_gram <- 
+  lep_biomass_2025$total_cat / lep_biomass_2025$tree_dry_mass_g
+
+abund_plot1 <- ggplot() +
+  geom_point(data = lep_biomass_2025, 
+             aes(x = blackberry, y = cat_per_gram,
+                 color = tree_species))+
+  geom_line(data = pred_total_cat_bla_add, aes(x = x,
+                                       y = predicted,
+                                       color = group))+
+  geom_ribbon(data = pred_total_cat_bla_add,
+              aes(x = x,
+                  ymin = conf.low,
+                  ymax = conf.high,
+                  fill = group), alpha = 0.2)+
+  geom_text(aes(x = 93, y = 1.4, label = "A", size = 25),
+            colour="black")+
+  scale_fill_manual(values = 
+                      c("tomato2", "slateblue", "forestgreen"))+
+  scale_color_manual(values = 
+                       c("tomato2", "slateblue", "forestgreen"))+
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(x = "Blackberry percent cover \nwithin 10 m",
+       y = "Predicted caterpillar abundance \nper g dry leaf biomass",
+       color = "Tree Species",
+       fill = "Tree Species")
+
+#native richness abundance plot
+pred_total_cat_natVegRich_add <-
+  predict_response(total_cat_natVegRich_add,
+                         terms = c("native_veg_rich", "tree_species"), 
+                         condition = c(tree_dry_mass_g = 24),
+                         bias_correction = T)
+
+abund_plot2 <- ggplot() +
+  geom_point(data = lep_biomass_2025,
+             aes(x = native_veg_rich,
+                 y = total_cat,
+                 color = tree_species))+
+  geom_line(data = pred_total_cat_natVegRich_add,
+            aes(x = x,
+                y = predicted,
+                color = group))+
+  geom_ribbon(data = pred_total_cat_natVegRich_add,
+              aes(x = x,
+                  ymin = conf.low,
+                  ymax = conf.high,
+                  fill = group), alpha = 0.2)+
+  geom_text(aes(x = 9.5, y = 43.8, label = "B", size = 25),
+            colour="black")+
+  scale_fill_manual(values = 
+                      c("tomato2", "slateblue", "forestgreen"))+
+  scale_color_manual(values = 
+                       c("tomato2", "slateblue", "forestgreen"))+
+  theme_bw()+
+  guides(size="none")+
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.75, 0.70),
+        legend.box.background = element_rect(color = "black"))+
+  labs(x = "Native species richness of \nwoody vegetation within 10 m",
+       y = "",
+       color = "Tree Species",
+       fill = "Tree Species")
+
+grid.arrange(abund_plot1, abund_plot2, nrow = 1)
+
+```
+
+## Abundance Effects Plot
+
+```{r abundance effects plot}
+# 1. Complete list of 11 additive models
+new_model_list <- list(
+  "Veg. Density"      = total_cat_veg_add,
+  "Prop. Native"         = total_cat_nat_add, 
+  "% Autumn olive"          = total_cat_ao_add, 
+  "% Multiflora rose"            = total_cat_mfr_add, 
+  "% Barberry"       = total_cat_bar_add, 
+  "% Blackberry"     = total_cat_bla_add, 
+  "% Coralberry"     = total_cat_cor_add, 
+  "Richness"       = total_cat_vegRich_add,
+  "Native Richness"     = total_cat_natVegRich_add, 
+  "Shannon Div."        = total_cat_shannon_add,
+  "Native Shannon Div."  = total_cat_natShannon_add)
+
+# 2. AUTOMATIC AIC EXTRACTION: Grab AICs and find the top models
+# We calculate delta AIC (dAIC). Any model within 2 units of the absolute lowest AIC is a "top model"
+aic_values <- sapply(new_model_list, AIC)
+min_aic <- min(aic_values)
+
+aic_df <- data.frame(
+  predictor = names(aic_values),
+  aic = aic_values,
+  daic = aic_values - min_aic,
+  # Dynamically flag if a model is among the best (dAIC <= 2)
+  is_best = (aic_values - min_aic) <= 2
+)
+
+# 3. Extract standardized parameters and force them into dataframes
+standardized_list <- lapply(new_model_list, function(mod) {
+  as.data.frame(standardize_parameters(mod, method = "refit", ci = 0.95))
+})
+
+all_standardized <- bind_rows(standardized_list, .id = "Predictor")
+names(all_standardized) <- tolower(names(all_standardized))
+
+# 4. Exact lowercase terms matching your continuous model predictors
+target_terms <- c(
+  "totalveg", "prop_native", "olive", "mfr", "barberry", "blackberry", 
+  "coralberry", "veg_rich", "native_veg_rich", "shannondiv", "native_shannondiv"
+)
+
+# 5. Filter, merge AIC flags, and build conditional formatting
+plot_data <- all_standardized %>%
+  filter(parameter %in% target_terms) %>%
+  left_join(aic_df, by = "predictor") %>%
+  mutate(
+    # Keep ordering by effect size size, or change to '-aic' if you want top models at the top
+    predictor = fct_reorder(predictor, std_coefficient),
+    
+    # STRATEGY 1: Add asterisks dynamically to the text labels of top models
+    text_label = ifelse(is_best,
+                        sprintf("%.2f (%.2f, %.2f) *", std_coefficient, ci_low, ci_high),
+                        sprintf("%.2f (%.2f, %.2f)", std_coefficient, ci_low, ci_high)),
+    
+    # Create a nice group variable for ggplot coloring
+    highlight_group = ifelse(is_best, "Top Model (dAIC ≤ 2)", "Other Model")
+  )
+
+# 6. Define axis boundaries for the standardized variables
+x_lower_limit <- -1.5
+x_upper_limit <- 1.5
+
+# 7. Generate the final styled forest plot
+abund_effects_plot <- 
+  ggplot(plot_data, aes(y = predictor, color = highlight_group)) +
+  # Baseline zero line (No effect)
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.8) +
+  
+  # Standardized confidence intervals
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.15, linewidth = 1) +
+  
+  # Standardized point estimates
+  geom_point(aes(x = std_coefficient), size = 4) +
+  
+  # STRATEGY 2: Dynamic text table on the right margin 
+  # We make the text bold if it is a top model to double down on formatting
+  # geom_text(aes(x = x_upper_limit + 0.5, label = text_label, fontface = ifelse(is_best, "bold", "plain")), 
+  #           hjust = 0, size = 3.5, color = "black") +
+  
+  # Set your specific custom colors (e.g., sharp dark red for top models, slate grey for others)
+  scale_color_manual(values = c("Top Model (dAIC ≤ 2)" = "firebrick3", "Other Model" = "lightsteelblue4")) +
+  
+  # Prevent extra-wide confidence intervals from ruining the visual layout
+  coord_cartesian(xlim = c(x_lower_limit, x_upper_limit), clip = "on") +
+  
+  theme_bw(base_size = 13) +
+  scale_x_continuous(expand = expansion(mult = c(0.1, 0.2))) + # Reserves 45% empty space on the right
+  labs(
+    title = "Caterpillar Abundance",
+    #subtitle = "Top performing AIC models highlighted in red with an asterisk (*)",
+    x = "Standardized Coefficient (95% CI)",
+    y = NULL,
+    color = "Model Fit (AIC)"
+  ) +
+  theme(legend.position = "none")+
+  theme(
+    axis.text.y = element_text(face = "bold"),
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+    #legend.position = "bottom" # Puts the color legend cleanly at the bottom
+  )+
+  geom_text(aes(x = -1.5, y = 11, label = "A"),
+            colour="black")
+
+abund_effects_plot
+
+```
+
+# Biomass GLMMs
+
+```{r total cat bm glmm}
+#selecting model families
+#tweedie model
+cat_bm_tweedie <- glmmTMB(cat_tree ~ 1,
+            ziformula=~0,
+            family=tweedie(link="log"),
+            data=lep_biomass_2025)
+
+#zero-inflated gamma model
+cat_bm_zigamma <- glmmTMB(cat_tree ~ 1,
+            family=ziGamma(link="log"),
+            ziformula=~1, #need to use 1; non-positive values not allowed
+            data=lep_biomass_2025)
+
+AICctab(cat_bm_tweedie, cat_bm_zigamma) 
+
+summary(cat_bm_zigamma)
+r2(cat_bm_zigamma)
+check_model(cat_bm_zigamma, size_dot = 1.2)
+check_overdispersion(cat_bm_zigamma)
+
+#zi formula
+cat_bm_zigamma_sp <- glmmTMB(cat_tree ~ 1,
+             family=ziGamma(link="log"),
+             ziformula=~tree_species,
+             data=lep_biomass_2025)
+
+cat_bm_zigamma_pnat <- glmmTMB(cat_tree ~ 1,
+             family=ziGamma(link="log"),
+             ziformula=~prop_native,
+             data=lep_biomass_2025)
+
+AICctab(cat_bm_zigamma, cat_bm_zigamma_sp, cat_bm_zigamma_pnat)
+
+summary(cat_bm_zigamma_sp)
+r2(cat_bm_zigamma_sp)
+check_model(cat_bm_zigamma_sp, size_dot = 1.2)
+check_overdispersion(cat_bm_zigamma_sp)
+
+#dispersion parameter
+cat_bm_zigamma_sp_d <- glmmTMB(cat_tree ~ 1,
+             family=ziGamma(link="log"),
+             ziformula=~tree_species,
+             dispformula = ~week,
+             data=lep_biomass_2025)
+
+#random effect
+cat_bm_zigamma_sp_re <- glmmTMB(cat_tree ~ tree_species + (1|property),
+             family=ziGamma(link="log"),
+             ziformula=~tree_species,
+             data=lep_biomass_2025)
+
+AICctab(cat_bm_zigamma, cat_bm_zigamma_sp, cat_bm_zigamma_sp_d, cat_bm_zigamma_sp_re) 
+
+#test hypotheses
+
+#null model
+cat_bm_null <- glmmTMB(cat_tree~1,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_spp <- glmmTMB(cat_tree~tree_species,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_veg <- glmmTMB(cat_tree~ totalveg,
+                          data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_nat <- glmmTMB(cat_tree~ prop_native,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_ao <- glmmTMB(cat_tree~olive,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_mfr <- glmmTMB(cat_tree~ mfr,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_bar <- glmmTMB(cat_tree~ barberry,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_bla <- glmmTMB(cat_tree~ blackberry,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_cor <- glmmTMB(cat_tree~ coralberry,
+                         data=lep_biomass_2025,
+                         ziformula=~tree_species,
+                         family=ziGamma(link="log"))
+
+cat_bm_vegRich <- glmmTMB(cat_tree~ veg_rich,
+                             data=lep_biomass_2025,
+                             ziformula=~tree_species,
+                             family=ziGamma(link="log"))
+
+cat_bm_shannon <- glmmTMB(cat_tree~shannondiv,
+                             data=lep_biomass_2025,
+                             ziformula=~tree_species,
+                             family=ziGamma(link="log"))
+
+cat_bm_natVegRich <- glmmTMB(cat_tree~ native_veg_rich,
+                             data=lep_biomass_2025,
+                             ziformula=~tree_species,
+                             family=ziGamma(link="log"))
+
+cat_bm_natShannon <- glmmTMB(cat_tree~native_shannondiv,
+                             data=lep_biomass_2025,
+                             ziformula=~tree_species,
+                             family=ziGamma(link="log"))
+
+
+AICctab(cat_bm_null, cat_bm_spp, cat_bm_veg, cat_bm_nat, cat_bm_ao,
+       cat_bm_mfr, cat_bm_bar, cat_bm_bla, cat_bm_cor,
+       cat_bm_vegRich, cat_bm_shannon, cat_bm_natVegRich, cat_bm_natShannon)
+
+summary(cat_bm_natShannon) 
+confint(cat_bm_natShannon)
+check_model(cat_bm_natShannon, size_dot = 1.2)
+check_overdispersion(cat_bm_natShannon)
+r2(cat_bm_natShannon)
+
+```
+
+## Biomass Plots
+
+```{r total cat bm plot}
+pred_cat_bm_natShannon <- predict_response(cat_bm_natShannon, 
+                                    terms = c("native_shannondiv"),
+                                    type = "fixed")
+
+bm.plot <- ggplot(data = pred_cat_bm_natShannon, 
+                              aes(x = x,
+                                       y = predicted,
+                                  ymax=0.3))+
+  geom_ribbon(data = pred_cat_bm_natShannon,
+              aes(ymin = conf.low,
+              ymax = conf.high),
+              fill = "orange",
+              alpha = 0.2)+
+  geom_line(data = pred_cat_bm_natShannon,
+            aes(y = predicted),
+            linewidth = 0.6,
+            color = "orange")+
+  geom_point(data = lep_biomass_2025,
+             aes(x = native_shannondiv,
+                 y = cat_tree),
+                 color = "orange")+
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(x = "Native Shannon diversity of woody vegetation within 10m",
+       y = "Predicted caterpillar \nbiomass (g) per tree")
+bm.plot
+
+```
+
+
+# Biomass Effects Plot
+
+```{r biomass effects plot}
+# 1. Your complete list of 11 models
+bm_model_list <- list(
+  "Veg. Density"      = cat_bm_veg,
+  "Prop. Native"  = cat_bm_nat, 
+  "% Autumn olive"          = cat_bm_ao, 
+  "% Multiflora rose"  = cat_bm_mfr, 
+  "% Barberry"       = cat_bm_bar, 
+  "% Blackberry"     = cat_bm_bla, 
+  "% Coralberry"     = cat_bm_cor, 
+  "Richness"       = cat_bm_vegRich,
+  "Native Richness"     = cat_bm_natVegRich, 
+  "Shannon Div."        = cat_bm_shannon,
+  "Native Shannon Div."  = cat_bm_natShannon
+)
+
+
+# 2. AUTOMATIC AIC EXTRACTION: Grab AICs and find the top models
+# We calculate delta AIC (dAIC). Any model within 2 units of the absolute lowest AIC is a "top model"
+aic_values <- sapply(bm_model_list, AIC)
+min_aic <- min(aic_values)
+
+aic_df <- data.frame(
+  predictor = names(aic_values),
+  aic = aic_values,
+  daic = aic_values - min_aic,
+  # Dynamically flag if a model is among the best (dAIC <= 2)
+  is_best = (aic_values - min_aic) <= 2
+)
+
+# 3. Extract standardized parameters and force them into dataframes
+standardized_list <- lapply(bm_model_list, function(mod) {
+  as.data.frame(standardize_parameters(mod, method = "refit", ci = 0.95))
+})
+
+all_standardized <- bind_rows(standardized_list, .id = "Predictor")
+names(all_standardized) <- tolower(names(all_standardized))
+
+# 4. Exact lowercase terms matching your continuous model predictors
+target_terms <- c(
+  "totalveg", "prop_native", "olive", "mfr", "barberry", "blackberry", 
+  "coralberry", "veg_rich", "native_veg_rich", "shannondiv", "native_shannondiv"
+)
+
+# 5. Filter, merge AIC flags, and build conditional formatting
+plot_data <- all_standardized %>%
+  filter(parameter %in% target_terms) %>%
+  left_join(aic_df, by = "predictor") %>%
+  mutate(
+    # Keep ordering by effect size size, or change to '-aic' if you want top models at the top
+    predictor = fct_reorder(predictor, std_coefficient),
+    
+    # STRATEGY 1: Add asterisks dynamically to the text labels of top models
+    text_label = ifelse(is_best,
+                        sprintf("%.2f (%.2f, %.2f) *", std_coefficient, ci_low, ci_high),
+                        sprintf("%.2f (%.2f, %.2f)", std_coefficient, ci_low, ci_high)),
+    
+    # Create a nice group variable for ggplot coloring
+    highlight_group = ifelse(is_best, "Top Model (dAIC ≤ 2)", "Other Model")
+  )
+
+# 6. Define axis boundaries for the standardized variables
+x_lower_limit <- -1.5
+x_upper_limit <- 1.5
+
+# 7. Generate the final styled forest plot
+bm_effects_plot <- 
+  ggplot(plot_data, aes(y = predictor, color = highlight_group)) +
+  # Baseline zero line (No effect)
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.8) +
+  
+  # Standardized confidence intervals
+  geom_errorbar(aes(xmin = ci_low, xmax = ci_high), height = 0.15, linewidth = 1) +
+  
+  # Standardized point estimates
+  geom_point(aes(x = std_coefficient), size = 4) +
+  
+  # STRATEGY 2: Dynamic text table on the right margin 
+  # We make the text bold if it is a top model to double down on formatting
+  # geom_text(aes(x = x_upper_limit + 0.2, label = text_label, fontface = ifelse(is_best, "bold", "plain")), 
+  #           hjust = 0, size = 3.5, color = "black") +
+  
+  # Set your specific custom colors (e.g., sharp dark red for top models, slate grey for others)
+  scale_color_manual(values = c("Top Model (dAIC ≤ 2)" = "firebrick3", "Other Model" = "lightsteelblue4")) +
+  
+  # Prevent extra-wide confidence intervals from ruining the visual layout
+  coord_cartesian(xlim = c(x_lower_limit, x_upper_limit), clip = "on") +
+  
+  theme_bw(base_size = 13) +
+  scale_x_continuous(expand = expansion(mult = c(0.1, 0.2))) + # Reserves 45% empty space on the right
+  labs(
+    title = "Caterpillar Biomass",
+    #subtitle = "Top performing AIC models highlighted in red with an asterisk (*)",
+    x = "Standardized Coefficient (95% CI)",
+    y = NULL,
+    color = "Model Fit (AIC)"
+  ) +
+  theme(
+    axis.text.y = element_text(face = "bold"),
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    legend.position = "inside",
+    legend.box.background = element_rect(color = "black"),
+    legend.position.inside = c(0.75, 0.25) # X and Y coordinates between 0 and 1
+  )+
+  geom_text(aes(x = -1.5, y = 11, label = "B"),
+            colour="black")
+
+bm_effects_plot
+
+Fig4 <- grid.arrange(abund_effects_plot, bm_effects_plot, ncol = 1)
+
+```
