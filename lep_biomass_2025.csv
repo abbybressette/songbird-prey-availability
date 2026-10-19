@@ -1,0 +1,75 @@
+vegpoint,plot_ID,date_collected,time_collected,week,date_processed,time_processed,letter_code,tree_species,dbh_cm,tree_height_m,sm_smooth_cat,med_smooth_cat,lg_smooth_cat,small_hairy_cat,med_hairy_cat,lg_hairy_cat,leaf_roller_cat,veg_survey,phenophase,pct_herbivory,smooth_cat_dry_mass_g,hairy_cat_dry_mass_g,tree_dry_mass_g,notes
+Rob12.4,Rob12.4_cherryA,5/14/25,8:46,1,5/26/25,9:00,A,cherry,20,12,0,2,0,0,0,0,0,yes,1,,0.0178,0,15.8683,"most leaves fully developed, some small, red, GWWA & CSWA heard, tree height estimated- still wet after 2 days in drying oven- not measured, put back in"
+Rob12.4,Rob12.4_hawthornA,5/14/25,9:26,1,5/26/25,10:09,A,hawthorn,12.1,4,1,0,0,1,0,0,0,yes,1,3.35,0,0.0006,16.0539,"immature leaves, tree height estimated"
+Rob12.4,Rob12.4_locustA,5/14/25,9:52,1,5/26/25,9:00,A,locust,22.5,16,9,0,0,0,0,0,9,yes,1,4.043,0.0038,0,11.3976,"immature leaves, tree height estimated"
+Rob12,Rob12_hawthornA,5/14/25,11:12,1,5/26/25,9:00,A,hawthorn,19.3,8,1,1,0,0,0,0,0,yes,2,1.678,0.0051,0,20.847,"GWWA & CSWA heard, tree height estimated"
+Rob12,Rob12_locustA,5/14/25,11:37,1,5/26/25,9:00,A,locust,9.2,6,1,0,0,0,0,0,1,yes,2,0.162,0.0004,0,8.3374,"immature leaves, tree height estimated"
+Rob11.4,Rob11.4_locustA,5/14/25,12:14,1,5/26/25,9:00,A,locust,7,6,4,0,0,0,0,0,4,no,2,,0.0012,0,10.5166,"no herbivory measurement  b/c leaves dried before measurement. marked with flagging tape; immature leaves, tree height estimated"
+Rob11.4,Rob11.4_hawthornA,5/14/25,12:37,1,5/26/25,9:00,A,hawthorn,7.6,4,1,2,0,0,0,0,1,no,2,,0.005,0,16.8969,"no herbivory measurement b/c leaves dried before measurement. marked with flagging tape; tree height estimated, mold on leaves"
+Rob11.4,Rob11.4_cherryA,5/14/25,12:51,1,5/26/25,9:00,A,cherry,7.3,5.5,1,1,0,0,0,0,0,no,2,4.566,0.0073,0,34.3739,"marked with flagging tape; leaf miner presence, tree height estimated"
+Rob11.3,Rob11.3_locustA,5/14/25,13:26,1,5/26/25,9:00,A,locust,34.8,11,7,3,0,0,0,0,8,yes,2,,0.0046,0,18.632,"tree height estimated - still wet after 2 days in drying oven- not measured, put back in, mold on leaves"
+Rob11.3,Rob11.3_cherryA,5/14/25,13:54,1,5/26/25,9:00,A,cherry,7,4.5,1,1,0,0,0,0,0,no,2,0.731,0.0064,0,31.2369,marked with flagging tape; tree height estimated
+Rob18.4,Rob18.4_cherryA,5/14/25,15:30,1,5/26/25,9:00,A,cherry,35.5,18,0,0,0,0,0,0,0,yes,2,,0,0,13.0982,"lots of galls, tree height estimated- still wet after 2 days in drying oven- not measured, put back in"
+Smith51,Smith51_hawthornA,5/15/25,8:00,1,5/26/25,9:00,A,hawthorn,32.6,7.8,0,0,0,0,0,0,0,yes,2,4.24,0,0,17.3465,signs of disease on leaves
+Smith51,Smith51_locustA,5/15/25,8:45,1,5/26/25,9:00,A,locust,32.6,9.6,5,1,0,0,0,0,5,yes,2,2.457,0.0156,0,9.7111,1-3 cm caterpillar found on leg- unsure if from sample 
+Smith51.2,Smith51.2_hawthornA,5/15/25,9:35,1,5/26/25,9:00,A,hawthorn,40.6,5,0,2,0,0,0,0,1,yes,2,4.636,0.0167,0,10.3767,"tree height estimated, galls present"
+Smith51.2,Smith51.2_locustA,5/15/25,9:51,1,5/26/25,9:00,A,locust,24.3,9.6,7,2,0,0,0,0,6,yes,2,,0.0146,0,10.7437,"one super tiny caterpillar- still wet after 2 days in drying oven- not measured, put back in, mold on leaves"
+Smith54,Smith54_hawthornA,5/15/25,11:05,1,5/26/25,9:00,A,hawthorn,43.5,4.2,2,3,0,0,0,0,0,yes,2,7.687,0.0123,0,33.1112,"lots of apple and plum at this site- mistaken for hawthorn during Sam's project and yesterday (either Rob18.4A or 18.4B), skipped locust here b/c not leafed out yet. Need to return to site, lots of small hawthorn and all small inchworms"
+Smith64,Smith64_hawthornA,5/15/25,12:20,1,5/26/25,10:06,A,hawthorn,129.5,9.8,3,2,0,0,0,0,3,yes,2,3.55,0.0325,0,19.9212,
+Smith58,Smith58_cherryA,5/15/25,14:15,1,5/26/25,9:00,A,cherry,6.5,4.5,0,0,0,0,0,0,0,yes,2,,0,0,26.2693,small amounts of mold on leaves
+Rob18.3,Rob18.3_locustA,5/21/25,7:44,2,5/29/25,10:00,A,locust,29.5,9.4,20,4,0,0,0,0,22,yes,2,0.5145,0.0316,0,24.7628,slight mold
+Rob18.3,Rob18.3_cherryA,5/21/25,8:53,2,5/29/25,10:35,A,cherry,35.3,16.5,1,2,0,0,0,0,1,yes,2,0.5518,0.0183,0,26.6518,"Cherry A - this oven was at 80 degrees, not 70"
+Rob18.3,Rob18.3_cherryB,5/21/25,9:32,2,5/29/25,10:00,B,cherry,56.3,14.5,1,0,0,0,0,2,0,yes,2,0.966,0.0013,0.068,31.0007,"Cherry B, first smooth caterpillar was a leaf miner, galls on leaves, one of three clippings collected near tent caterpillar web - this oven was at 80 degrees, not 70"
+Rob18.2,Rob18.2_cherryA,5/21/25,10:34,2,5/29/25,9:32,A,cherry,23.7,11.4,2,0,0,0,0,0,0,yes,2,1.9814,0.0003,0,28.9172,"wasp gall present, leaf miner caterpillars"
+Rob18.2,Rob18.2_locustA,5/21/25,11:44,2,5/29/25,9:09,A,locust,28.2,16.8,12,5,0,0,0,0,15,yes,2,1.0912,0.0359,0,34.9026,
+Rob18.2,Rob18.2_hawthornA,5/21/25,12:43,2,5/29/25,10:18,A,hawthorn,9.3,7,0,0,0,0,1,0,0,yes,2,0.3168,0,0.0137,17.9105,"Hawthorn A, height estimated, spiny caterpillar goes in category of hairy - this oven was at 80 degrees, not 70"
+Rob18.2,Rob18.2_hawthornB,5/21/25,13:25,2,5/29/25,9:14,B,hawthorn,23.5,11,1,0,0,0,0,0,0,yes,2,2.7315,0.0042,0,17.4339,"Hawthorn B, closest to Rob 18.2; coordinates in veg survey data, height estimated"
+Rob18.2,Rob18.2_locustB,5/21/25,13:53,2,5/29/25,9:21,B,locust,23,11.2,17,3,0,0,0,0,19,yes,2,2.6,0.0402,0,20.1408,"Locust B, closest to Rob 18.2; coordinates in veg survey data"
+Rob24,Rob24_locustA,5/22/25,7:33,2,5/29/25,10:33,A,locust,10.4,10,2,1,0,0,0,0,3,yes,2,0.132,0.005,0,19.2824,"height estimated - this oven was at 80 degrees, not 70"
+Rob17,Rob17_hawthornA,5/22/25,8:38,2,5/29/25,9:19,A,hawthorn,28,10,0,0,0,0,0,0,0,yes,2,1.619,0,0,7.1942,"height estimated, gall on leaves"
+Rob17,Rob17_locustA,5/22/25,9:06,2,5/29/25,9:42,A,locust,19.2,10,6,0,0,0,0,0,5,yes,2,1.101,0.0022,0,23.5903,"mold, leaf miners, small, white, silky cocoons (half cm)"
+Rob17,Rob17_cherryA,5/22/25,10:15,2,5/29/25,9:42,A,cherry,54.5,18,0,0,0,0,0,0,0,yes,2,2.814,0,0,31.9643,wasp galls
+Rob17.3,Rob17.3_hawthornA,5/22/25,11:10,2,5/29/25,9:03,A,hawthorn,7.5,5,0,2,0,0,0,0,0,yes,2,2.096,0.0435,0,7.3607,"galls, height estimated"
+Rob17.3,Rob17.3_cherryA,5/22/25,11:47,2,5/29/25,9:24,A,cherry,98.5,20.4,1,0,0,0,0,0,0,yes,2,2.549,0.001,0,41.4705,galls
+Rob17.5,Rob17.5_locustA,5/22/25,12:50,2,5/29/25,10:27,A,locust,21,11.6,13,0,0,0,0,0,12,yes,2,1.146,0.0071,0,23.9114,"early leaves - this oven was at 80 degrees, not 70"
+Rob17.5,Rob17.5_hawthornA,5/22/25,13:52,2,5/29/25,9:37,A,hawthorn,25.2,4,0,0,0,0,0,0,0,yes,2,4.448,0,0,9.7586,height estimate. multiple shoots growing from a dead tree. we sampled the shoots that had green leaves
+Starkey2,Starkey2_hawthornA,5/23/25,7:14,2,5/29/25,10:00,A,hawthorn,61.3,5.8,2,0,0,0,0,1,1,yes,2,2.596,0.007,0.3222,30.4199,"big tent caterpillar - this oven was at 80 degrees, not 70"
+Starkey2,Starkey2_hawthornB,5/23/25,8:00,2,5/29/25,10:00,B,hawthorn,37,5,0,0,0,0,0,0,0,yes,2,1.173,0,0,35.3688,"Hawthorn B - this oven was at 80 degrees, not 70"
+Starkey2,Starkey2_cherryA,5/23/25,8:33,2,5/29/25,10:00,A,cherry,42.3,18.2,0,0,0,0,0,0,0,yes,2,10.753,0,0,27.3905,"This oven was at 80 degrees, not 70"
+Starkey5,Starkey5_locustA,5/23/25,9:17,2,5/29/25,10:00,A,locust,9.8,6,41,2,0,0,0,0,43,yes,1,2.378,0.0485,0,11.6115,"2 clips taken b/c tree is small - this oven was at 80 degrees, not 70"
+Starkey5,Starkey5_cherryA,5/23/25,10:31,2,5/29/25,10:21,A,cherry,46,20,0,2,0,0,0,0,0,yes,2,2.673,0.0339,0,22.6655,"Cherry A, leaf miner found - this oven was at 80 degrees, not 70"
+Starkey5,Starkey5_cherryB,5/23/25,10:58,2,5/29/25,10:00,B,cherry,39.3,10.2,0,0,0,0,0,0,0,yes,2,1.295,0,0,33.2571,"Cherry B, 2 clips taken; close to house and not a lot of reachable branches - this oven was at 80 degrees, not 70"
+Starkey5,Starkey5_locustB,5/23/25,11:26,2,5/29/25,10:00,B,locust,48.6,25.2,8,0,0,0,0,0,8,yes,2,1.729,0.0075,0,7.1784,"Locust B, 1 clip taken b/c other branches too high to reach - this oven was at 80 degrees, not 70"
+Starkey1,Starkey1_locustA,5/23/25,12:21,2,5/29/25,10:00,A,locust,9.3,5.5,34,8,0,0,0,0,41,yes,2,0.406,0.1005,0,19.8174,"This oven was at 80 degrees, not 70"
+Bowkley2,Bowkley2_cherryA,6/3/25,14:20,3,6/17/25,9:28,A,cherry,19.2,8,0,2,0,0,0,0,0,yes,2,1.567,0.0059,0,47.1809,inchworms
+Bowkley2,Bowkley2_locustA,6/3/25,14:52,3,6/17/25,9:39,A,locust,44.2,12,4,1,0,0,0,0,5,yes,2,1.783,0.0382,0,30.4825,
+Bowkley2,Bowkley2_locustB,6/3/25,15:50,3,6/17/25,9:20,B,locust,66.1,16.1,6,0,0,0,0,0,6,yes,2,2.003,0.0073,0,20.4572,
+Bowkley2,Bowkley2_hawthornA,6/3/25,16:34,3,6/17/25,9:47,A,hawthorn,33.5,4.2,0,1,0,0,0,0,0,yes,2,2.333,0.0182,0,13.5939,
+Bowkley5,Bowkley5_locustA,6/3/25,17.26,3,6/12/25,13:23,A,locust,11.7,12.5,6,0,0,0,0,0,6,yes,2,10.027,0.0035,0,15.4801,
+Bowkley5,Bowkley5_hawthornA,6/3/25,18:15,3,6/12/25,11:27,A,hawthorn,12.7,5.5,1,0,0,0,0,0,0,yes,2,4.403,0.0011,0,19.3264,forgot to measure height; estimated an hour after coming back from field
+URR7,URR7_cherryA,6/4/25,8:00,3,6/12/25,13:26,A,cherry,8.8,8.2,0,0,0,0,0,0,0,yes,3,0.367,0,0,38.8831,
+URR7,URR7_cherryB,6/4/25,8:30,3,6/12/25,12:03,B,cherry,38,17.6,0,0,0,0,0,0,0,yes,2,1.729,0,0,29.3961,
+URR7,URR7_locustA,6/4/25,9:07,3,6/12/25,13:39,A,locust,71.4,25.3,2,2,0,0,0,0,4,yes,2,2.642,0.0091,0,27.989,
+URR6,URR6_cherryA,6/4/25,10:18,3,6/12/25,,A,cherry,20.1,14,0,0,0,0,0,0,0,yes,2,0.474,0,0,32.714,Height estimated
+URR6,URR6_locustA,6/4/25,10:45,3,6/12/25,11:13,A,locust,18,14,6,2,0,0,0,0,8,yes,2,2.418,0.017,0,28.617,Height estimated
+URR3,URR3_cherryA,6/4/25,12:29,3,6/12/25,11:43,A,cherry,25.3,7.6,0,0,0,0,0,0,0,yes,2,2.709,0,0,53.4781,
+URR3,URR3_cherryB,6/4/25,13:12,3,6/12/25,13:31,B,cherry,22.8,7,0,0,0,0,0,0,0,yes,2,4.217,0,0,31.7085,Difficult to clip; only 2 clips
+URR3,URR3_locustA,6/4/25,13:48,3,6/12/25,11:22,A,locust,85.4,13.2,2,3,0,0,0,0,5,yes,2,2.228,0.0118,0,16.4022,Difficult to clip; only 2 clips
+Chimney1,Chimney1_locustA,6/5/25,7:48,3,6/12/25,11:56,A,locust,14.3,7,1,1,0,0,0,0,1,yes,2,0.473,0.0048,0,24.2767,fruit fly larvae found (not counted as leps)
+Chimney1,Chimney1_locustB,6/5/25,8:30,3,6/12/25,11:16,B,locust,24.5,10.6,1,0,0,0,0,0,1,yes,2,0.503,0.0012,0,38.7472,"yellowing leaves, fruit fly larvae. lost data entered so used average of all samples with one small smooth caterpillar to extrapolate smooth cat dry mass"
+Chimney1,Chimney1_cherryA,6/5/25,9:15,3,6/12/25,11:51,A,cherry,20.8,12,1,0,0,0,0,0,0,yes,2,1.086,0.0002,0,16.8923,"gall on leaves, caterpillar was a leaf miner"
+Chimney6,Chimney6_cherryA,6/5/25,10:01,3,6/12/25,11:01,A,cherry,37.5,13.2,0,0,0,0,0,0,0,yes,2,1.328,0,0,33.6215,
+Chimney6,Chimney6_hawthornA,6/5/25,10:40,3,6/17/25,9:32,A,hawthorn,18.3,4.8,0,0,0,0,0,0,0,yes,2,4.668,0,0,19.2951,rust fungus present
+Chimney6,Chimney6_hawthornB,6/5/25,11:11,3,6/12/25,11:26,B,hawthorn,45.3,7,0,0,0,0,0,0,0,yes,2,0.878,0,0,15.3138,
+Chimney6,Chimney6_cherryB,6/5/25,11:31,3,6/12/25,11:31,B,cherry,22.5,13.2,0,1,0,0,0,0,0,yes,2,0.216,0.015,0,46.3821,
+Chimney3,Chimney3_hawthornA,6/5/25,12:53,3,6/12/25,12:00,A,hawthorn,35,5.8,0,1,0,0,0,0,0,yes,2,0.339,0.0106,0,19.5206,
+Chimney3,Chimney3_hawthornB,6/5/25,13:29,3,6/12/25,12:07,B,hawthorn,48.7,5.5,0,1,0,0,0,0,0,yes,2,2.253,0.0008,0,19.0821,
+Chimney3,Chimney3_locustA,6/5/25,14:04,3,6/12/25,13:35,A,locust,17.8,11.7,7,0,0,0,0,0,2,yes,2,0.139,0.0007,0,28.6099,only 2 clips taken- difficult to reach high branches. 4 leaf miners
+Rob13.4,Rob13.4_locustA,6/6/25,9:44,3,6/12/25,13:20,A,locust,42.2,14.8,4,2,0,0,0,0,6,yes,2,5.517,0.0176,0,31.6808,
+Rob13.5,Rob13.5_hawthornA,6/6/25,7:45,3,6/12/25,13:09,A,hawthorn,43.7,8.5,1,0,0,0,0,0,0,yes,2,0.627,0.0004,0,29.9895,"tiny leafminer, rust fungus on leaves"
+Rob13.4,Rob13.4_cherryB,6/6/25,10:25,3,6/17/25,9:43,B,cherry,34.5,17.8,0,0,0,0,0,0,0,yes,2,3.607,0,0,19.6152,"tiny black insect eggs, lots of woody galls on focal tree"
+Rob13.5,Rob13.5_locustA,6/6/25,8:14,3,6/12/25,13:16,A,locust,25.9,15.5,10,3,0,0,0,0,13,yes,2,1.424,0.024,0,17.3076,
+Rob8,Rob8_locustA,6/6/25,12:12,3,6/17/25,9:37,A,locust,68.5,12.6,3,0,0,0,0,0,3,yes,2,0.461,0.0001,0,35.635,
+Rob13.4,Rob13.4_cherryA,6/6/25,9:12,3,6/17/25,9:49,A,cherry,28.7,15.2,0,1,0,0,0,0,0,yes,2,3.904,0.0138,0,33.8869,
+Rob9.2,Rob9.2_cherryA,6/6/25,11:58,3,6/17/25,9:15,A,cherry,21.5,8.4,0,0,0,0,0,0,0,yes,2,2.621,0,0,21.2072,
+Rob13.4,Rob13.4_locustB,6/6/25,10:46,3,6/12/25,13:18,B,locust,36.7,15.6,0,1,0,0,0,0,1,yes,2,2.488,0.0024,0,12.3114,
